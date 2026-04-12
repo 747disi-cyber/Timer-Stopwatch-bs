@@ -462,9 +462,7 @@
     selectWrappers.forEach((wrapper) => {
       const select = wrapper.querySelector('select');
       select.addEventListener('mousedown', () => {
-        if (document.activeElement === select) {
-          wrapper.classList.toggle('open');
-        }
+        wrapper.classList.add('open');
       });
       select.addEventListener('focus', () => wrapper.classList.add('open'));
       select.addEventListener('blur', () => wrapper.classList.remove('open'));
@@ -472,12 +470,14 @@
 
     themeSelect.addEventListener('change', () => {
       applyTheme(themeSelect.value);
+      themeSelect.closest('.select-wrapper')?.classList.remove('open');
     });
 
     languageSelect.addEventListener('change', () => {
       if (languageSelect.value === 'ru') {
         location.href = 'index.html';
       }
+      languageSelect.closest('.select-wrapper')?.classList.remove('open');
     });
 
     document.addEventListener('click', (event) => {
