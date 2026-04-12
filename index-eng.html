@@ -212,18 +212,15 @@
       -moz-appearance: none;
       appearance: none;
     }
-    .settings .select-arrow {
+    .settings .select-wrapper::after {
+      content: '▼';
       position: absolute;
       top: 50%;
-      right: 14px;
+      right: 12px;
       transform: translateY(-50%);
-      pointer-events: none;
-      font-size: 0.95rem;
       color: var(--select-text);
-      transition: transform 0.2s ease;
-    }
-    .settings .select-wrapper.open .select-arrow {
-      transform: translateY(-50%) rotate(90deg);
+      font-size: 0.95rem;
+      pointer-events: none;
     }
     .settings select option {
       color: var(--select-text);
@@ -274,7 +271,6 @@
             <option value="light">Light</option>
             <option value="cyberpunk">Cyberpunk</option>
           </select>
-          <span class="select-arrow">▼</span>
         </div>
       </label>
       <label>
@@ -284,7 +280,6 @@
             <option value="en" selected>English</option>
             <option value="ru">Русский</option>
           </select>
-          <span class="select-arrow">▼</span>
         </div>
       </label>
       <small>Press Reset to apply new time.</small>
