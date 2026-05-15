@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Stopwatch</title>
+  <noscript>
+    <meta http-equiv="refresh" content="0;URL=no-js-eng.html" />
+  </noscript>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #4f8bf5 0%, #2f4c7d 100%);
+      --text: #fff;
+      --card-bg: rgba(255,255,255,0.08);
+      --button-start: #42d37f;
+      --button-start-text: #0b2d18;
+      --button-reset: #ff6b6b;
+      --button-reset-text: #3d0202;
+      --button-link: rgba(255,255,255,0.15);
+      --button-link-text: #fff;
+      --input-bg: rgba(255,255,255,0.12);
+      --input-text: #fff;
+      --select-text: #111;
+      --input-border: rgba(255,255,255,0.25);
+      --lap-border: rgba(255,255,255,0.15);
+    }
+    .theme-dark {
+      --bg: linear-gradient(135deg, #14161f 0%, #202433 100%);
+      --text: #e8ecff;
+      --card-bg: rgba(255,255,255,0.08);
+      --button-start: #53c17a;
+      --button-start-text: #0a1d11;
+      --button-reset: #ff7a7a;
+      --button-reset-text: #2e0000;
+      --button-link: rgba(255,255,255,0.1);
+      --button-link-text: #e8ecff;
+      --input-bg: rgba(255,255,255,0.08);
+      --input-text: #e8ecff;
+      --select-text: #fff;
+      --input-border: rgba(255,255,255,0.2);
+      --lap-border: rgba(255,255,255,0.1);
+    }
+    .theme-light {
+      --bg: linear-gradient(135deg, #eef4ff 0%, #d6e2ff 100%);
+      --text: #1f2240;
+      --card-bg: rgba(255,255,255,0.95);
+      --button-start: #3f8f50;
+      --button-start-text: #ffffff;
+      --button-reset: #f15d5d;
+      --button-reset-text: #ffffff;
+      --button-link: #cfd7ed;
+      --button-link-text: #1f2240;
+      --input-bg: #f5f8ff;
+      --input-text: #1f2240;
+      --select-text: #111;
+      --input-border: #cfd7ed;
+      --lap-border: rgba(0,0,0,0.1);
+    }
+    .theme-cyberpunk {
+      --bg: radial-gradient(circle at top, #6efff8 0%, #0d1120 40%, #120827 100%);
+      --text: #f7f7ff;
+      --card-bg: rgba(8, 8, 25, 0.82);
+      --button-start: #ff3eff;
+      --button-start-text: #0a002d;
+      --button-reset: #ff005a;
+      --button-reset-text: #fff;
+      --button-link: rgba(127, 0, 255, 0.35);
+      --button-link-text: #00f5ff;
+      --input-bg: rgba(14, 14, 43, 0.75);
+      --input-text: #f7f7ff;
+      --select-text: #f7f7ff;
+      --input-border: rgba(127, 0, 255, 0.55);
+      --lap-border: rgba(127, 0, 255, 0.3);
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+    .timer-card {
+      width: min(450px, 95vw);
+      padding: 30px;
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+      background: var(--card-bg);
+      backdrop-filter: blur(14px);
+      text-align: center;
+      transition: background 0.3s ease;
+    }
+    .timer-card h1 {
+      margin: 0 0 16px;
+      font-size: 1.75rem;
+    }
+    .display {
+      font-size: 3.5rem;
+      letter-spacing: 0.05em;
+      margin: 24px 0;
+      font-weight: 700;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+    button, .link-btn {
+      min-width: 140px;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.16s ease, background 0.16s ease;
+      text-decoration: none;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    button:hover, .link-btn:hover {
+      transform: translateY(-2px);
+    }
+    .start {
+      background: var(--button-start);
+      color: var(--button-start-text);
+    }
+    .reset {
+      background: var(--button-reset);
+      color: var(--button-reset-text);
+    }
+    .link-btn {
+      background: var(--button-link);
+      color: var(--button-link-text);
+    }
+    .break {
+      flex-basis: 100%;
+      height: 12px;
+    }
+    .laps-container {
+      margin-top: 20px;
+      max-height: 150px;
+      overflow-y: auto;
+      text-align: left;
+      padding-right: 5px;
+    }
+    .laps-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .laps-container::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 999px;
+    }
+    .theme-light .laps-container::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.15);
+    }
+    .lap-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--lap-border);
+      font-size: 0.95rem;
+    }
+    .lap-item:last-child {
+      border-bottom: none;
+    }
+    .settings {
+      margin-top: 24px;
+      display: grid;
+      gap: 14px;
+      text-align: left;
+    }
+    .settings label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.95rem;
+    }
+    .settings .select-wrapper {
+      position: relative;
+      min-width: 150px;
+    }
+    .settings select {
+      min-width: 150px;
+      border-radius: 999px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--input-text);
+      padding: 10px 12px;
+      text-align: center;
+      padding-right: 36px;
+      color: var(--select-text);
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+    .settings .select-wrapper::after {
+      content: '▼';
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      color: var(--select-text);
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+    .settings select option {
+      color: var(--select-text);
+      background: var(--input-bg);
+    }
+    .theme-dark .settings select option {
+      color: #111;
+    }
+    .settings select:focus {
+      outline: 2px solid rgba(255,255,255,0.55);
+    }
+  </style>
+</head>
+<body>
+  <main class="timer-card">
+    <h1>Simple Stopwatch</h1>
+    <div class="display" id="timeDisplay">00:00:00:00</div>
+    <div class="controls">
+      <button class="start" id="startBtn">Start/Continue</button>
+      <button class="reset" id="resetBtn">Reset</button>
+      <div class="break"></div>
+      <a href="index-eng.html" class="link-btn">Timer</a>
+    </div>
+    <div class="laps-container" id="lapsContainer"></div>
+    <div class="settings">
+      <label>
+        Theme
+        <div class="select-wrapper">
+          <select id="themeSelect">
+            <option value="default">Default</option>
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="cyberpunk">Cyberpunk</option>
+          </select>
+        </div>
+      </label>
+      <label>
+        Language/Язык
+        <div class="select-wrapper">
+          <select id="languageSelect">
+            <option value="en" selected>English</option>
+            <option value="ru">Русский</option>
+          </select>
+        </div>
+      </label>
+    </div>
+  </main>
+
+  <script>
+    const display = document.getElementById('timeDisplay');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const lapsContainer = document.getElementById('lapsContainer');
+    const themeSelect = document.getElementById('themeSelect');
+    const languageSelect = document.getElementById('languageSelect');
+    const selectWrappers = document.querySelectorAll('.select-wrapper');
+
+    let totalCentiseconds = 0;
+    let intervalId = null;
+    let isRunning = false;
+    let lapCount = 0;
+    const MAX_CENTISECONDS = 24 * 3600 * 100;
+
+    function formatTime(centiseconds) {
+      const hours = Math.floor(centiseconds / 360000);
+      const minutes = Math.floor((centiseconds % 360000) / 6000);
+      const seconds = Math.floor((centiseconds % 6000) / 100);
+      const partCentiseconds = centiseconds % 100;
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}:${String(partCentiseconds).padStart(2, '0')}`;
+    }
+
+    function updateDisplay() {
+      display.textContent = formatTime(totalCentiseconds);
+    }
+
+    function updateResetButton() {
+      if (isRunning) {
+        resetBtn.textContent = 'Lap';
+        resetBtn.style.background = 'var(--button-lap, #ffd166)';
+        resetBtn.style.color = 'var(--button-lap-text, #3d2e00)';
+      } else {
+        resetBtn.textContent = 'Reset';
+        resetBtn.style.background = 'var(--button-reset)';
+        resetBtn.style.color = 'var(--button-reset-text)';
+      }
+    }
+
+    function startTimer() {
+      if (isRunning) {
+        pauseTimer();
+        return;
+      }
+      isRunning = true;
+      updateResetButton();
+      intervalId = setInterval(() => {
+        totalCentiseconds += 1;
+        if (totalCentiseconds >= MAX_CENTISECONDS) {
+          clearInterval(intervalId);
+          intervalId = null;
+          isRunning = false;
+          totalCentiseconds = 0;
+          lapCount = 0;
+          lapsContainer.innerHTML = '';
+          updateResetButton();
+          updateDisplay();
+          document.body.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #b02a2a 100%)';
+          setTimeout(() => { document.body.style.background = ''; }, 1200);
+          return;
+        }
+        updateDisplay();
+      }, 10);
+    }
+
+    function pauseTimer() {
+      clearInterval(intervalId);
+      intervalId = null;
+      isRunning = false;
+      updateResetButton();
+    }
+
+    function handleResetOrLap() {
+      if (isRunning) {
+        if (totalCentiseconds === 0) return;
+        lapCount++;
+        const lapItem = document.createElement('div');
+        lapItem.className = 'lap-item';
+        lapItem.innerHTML = `<span>Lap ${lapCount}</span><strong>${formatTime(totalCentiseconds)}</strong>`;
+        lapsContainer.prepend(lapItem);
+      } else {
+        totalCentiseconds = 0;
+        lapCount = 0;
+        lapsContainer.innerHTML = '';
+        updateDisplay();
+      }
+    }
+
+    function applyTheme(theme) {
+      document.body.classList.remove('theme-default', 'theme-dark', 'theme-light', 'theme-cyberpunk');
+      document.body.classList.add(`theme-${theme}`);
+      themeSelect.value = theme;
+      localStorage.setItem('timerTheme', theme);
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('timerTheme') || 'default';
+      applyTheme(savedTheme);
+    }
+
+    selectWrappers.forEach((wrapper) => {
+      const select = wrapper.querySelector('select');
+      select.addEventListener('mousedown', () => wrapper.classList.add('open'));
+      select.addEventListener('focus', () => wrapper.classList.add('open'));
+      select.addEventListener('blur', () => wrapper.classList.remove('open'));
+    });
+
+    themeSelect.addEventListener('change', () => {
+      applyTheme(themeSelect.value);
+      themeSelect.closest('.select-wrapper')?.classList.remove('open');
+    });
+
+    languageSelect.addEventListener('change', () => {
+      if (languageSelect.value === 'ru') {
+        location.href = 'index-sec.html';
+      }
+      languageSelect.closest('.select-wrapper')?.classList.remove('open');
+    });
+
+    document.addEventListener('click', (event) => {
+      selectWrappers.forEach((wrapper) => {
+        if (!wrapper.contains(event.target)) {
+          wrapper.classList.remove('open');
+        }
+      });
+    });
+
+    startBtn.addEventListener('click', startTimer);
+    resetBtn.addEventListener('click', handleResetOrLap);
+
+    initTheme();
+    updateDisplay();
+  </script>
+</body>
+</html>
